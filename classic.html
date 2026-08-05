@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>猜！星！铁！ · 星穹铁道每日猜角色</title>
+<meta name="description" content="非官方粉丝同人小游戏：每天一道星穹铁道猜角色题，6 次机会，按属性比对逼近答案。">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="home-link" href="index.html">← 星铁游乐场</a>
+  <h1>猜！<span class="accent">星</span>！<span class="accent2">铁</span>！</h1>
+  <p class="tagline">星穹铁道 · 每日猜角色</p>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-tab="daily">每日挑战</button>
+  <button class="tab" data-tab="infinite">无限模式</button>
+  <button class="tab" data-tab="pixel">像素立绘</button>
+</nav>
+
+<main>
+  <!-- 每日 / 无限 共用的游戏视图 -->
+  <section id="view-game" class="view">
+    <div class="mode-banner" id="modeBanner"></div>
+
+    <div class="guess-bar" id="guessBar">
+      <div class="input-wrap">
+        <input id="guessInput" type="text" placeholder="输入角色名，如：卡芙卡"
+               autocomplete="off" autocapitalize="off" spellcheck="false">
+        <ul id="suggestList" class="suggest-list hidden"></ul>
+      </div>
+      <div class="tries-left" id="triesLeft"></div>
+    </div>
+
+    <div class="grid-head" id="gridHead">
+      <span class="c-name">角色</span><span>性别</span><span>星级</span><span>命途</span><span>元素</span><span>版本</span><span>能量</span>
+    </div>
+    <div id="rows" class="rows"></div>
+
+    <div id="result" class="result hidden"></div>
+
+    <details class="legend">
+      <summary>图例与规则</summary>
+      <ul>
+        <li>🟩 完全正确　🟥 不对　🟧 接近（同一角色的不同形态，如「丹恒」与「丹恒•饮月」）</li>
+        <li>⬆️ / ⬇️ 用于数值维度（星级 / 实装版本 / 能量上限）：⬆️ 表示答案比你猜的<b>更高</b>，⬇️ 表示更低。</li>
+        <li>能量上限为「特殊」的角色（黄泉、飞霄、遐蝶、白厄、昔涟）没有常规能量条，只能精确匹配。</li>
+        <li>每日挑战按本地日期出题，同一天所有人同一题，共 6 次机会；进度存在本机浏览器里。</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- 像素立绘：独立玩法 -->
+  <section id="view-pixel" class="view hidden">
+    <div class="pixel-panel">
+      <p class="pixel-hint">看像素立绘猜角色：每猜错一次清晰一档，共 6 次机会。每日一题，与「每日挑战」互不影响。</p>
+      <div class="pixel-stage"><canvas id="pixelCanvas" width="512" height="512"></canvas></div>
+      <p class="pixel-status" id="pixelStatus"></p>
+      <div class="guess-bar">
+        <div class="input-wrap">
+          <input id="pixelInput" type="text" placeholder="输入角色名，猜这幅立绘"
+                 autocomplete="off" autocapitalize="off" spellcheck="false">
+          <ul id="pixelSuggest" class="suggest-list hidden"></ul>
+        </div>
+        <button class="btn ghost" id="practiceBtn">换一张练习</button>
+        <button class="btn ghost hidden" id="backDailyBtn">返回每日题</button>
+      </div>
+      <div id="pixelChips" class="chips"></div>
+      <div id="pixelResult" class="result hidden"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>非官方粉丝同人作品，与米哈游（HoYoverse）无关。角色形象与素材版权归原厂商所有。</p>
+  <p>数据来源：<a href="https://github.com/Mar-7th/StarRailRes" target="_blank" rel="noopener">StarRailRes</a> ·
+     <a href="https://wiki.biligame.com/sr/" target="_blank" rel="noopener">崩坏：星穹铁道 BWIKI</a>　|　“超越 x% 玩家”为本地估算值</p>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="data/characters.js"></script>
+<script src="game.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

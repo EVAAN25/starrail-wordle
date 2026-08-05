@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人气对决 · 星铁游乐场</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="home-link" href="index.html">← 星铁游乐场</a>
+  <h1>人气<span class="accent">对</span><span class="accent2">决</span></h1>
+  <p class="tagline">谁的官方角色视频播放量更高？</p>
+</header>
+
+<main>
+  <section class="view">
+    <p class="duel-streak" id="duelStreak"></p>
+    <div class="duel-stage" id="duelStage"></div>
+    <p class="tl-hint" id="duelHint">点击你认为播放量更高的一方。答错结算，看你能连胜几场。</p>
+    <div id="duelResult" class="result hidden"></div>
+    <p class="tl-hint" style="margin-top:14px" id="duelSource"></p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>非官方粉丝同人作品，与米哈游（HoYoverse）无关。角色素材版权归原厂商所有；播放量来自 B站「崩坏星穹铁道」官号公开数据。</p>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+<script src="data/characters.js"></script>
+<script src="data/popularity.js"></script>
+<script src="game.js"></script>
+<script src="duel.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>语音猜人 · 星铁游乐场</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="home-link" href="index.html">← 星铁游乐场</a>
+  <h1>语音<span class="accent">猜</span><span class="accent2">人</span></h1>
+  <p class="tagline">听台词猜角色 · 每日一题</p>
+</header>
+
+<main>
+  <section class="view voice-panel">
+    <p class="pixel-hint" id="voiceHint">播放片段，猜出是哪位角色。猜错一次解锁更长片段，共 6 次机会。</p>
+    <div class="voice-unlocks" id="voiceUnlocks"></div>
+    <button class="play-btn" id="playBtn">▶</button>
+    <p class="voice-progress" id="voiceProgress"></p>
+    <div class="voice-quote hidden" id="voiceQuote"></div>
+
+    <div class="guess-bar">
+      <div class="input-wrap">
+        <input id="vInput" type="text" placeholder="输入角色名" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <ul id="vSuggest" class="suggest-list hidden"></ul>
+      </div>
+      <button class="btn ghost" id="vPracticeBtn">换一条练习</button>
+      <button class="btn ghost hidden" id="vBackBtn">返回每日题</button>
+    </div>
+    <div id="vChips" class="chips"></div>
+    <div id="vResult" class="result hidden"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>非官方粉丝同人作品，与米哈游（HoYoverse）无关。语音素材来自
+     <a href="https://wiki.biligame.com/sr/" target="_blank" rel="noopener">崩坏：星穹铁道 BWIKI</a>，版权归原厂商所有。</p>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+<script src="data/characters.js"></script>
+<script src="data/voice.js"></script>
+<script src="game.js"></script>
+<script src="voice.js"></script>
+</body>
+</html>

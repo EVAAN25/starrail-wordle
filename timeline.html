@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>版本排排坐 · 星铁游乐场</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="home-link" href="index.html">← 星铁游乐场</a>
+  <h1>版本<span class="accent">排排</span><span class="accent2">坐</span></h1>
+  <p class="tagline">按实装版本从早到晚排序</p>
+</header>
+
+<main>
+  <section class="view">
+    <p class="pixel-hint">下面 5 位角色，按实装版本<b>从早到晚</b>排好（点两个角色互换位置），排对为止，共 3 次提交机会。</p>
+    <p class="conn-mistakes" id="tlStatus"></p>
+    <div class="tl-list" id="tlList"></div>
+    <div class="conn-actions">
+      <button class="btn" id="tlSubmit">提交排序</button>
+      <button class="btn ghost" id="tlPracticeBtn">换一组练习</button>
+      <button class="btn ghost hidden" id="tlBackBtn">返回每日题</button>
+    </div>
+    <div id="tlResult" class="result hidden"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>非官方粉丝同人作品，与米哈游（HoYoverse）无关。角色素材版权归原厂商所有；数据来自 StarRailRes / BWIKI。</p>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+<script src="data/characters.js"></script>
+<script src="game.js"></script>
+<script src="timeline.js"></script>
+</body>
+</html>

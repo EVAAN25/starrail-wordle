@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>阵营连线 · 星铁游乐场</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="home-link" href="index.html">← 星铁游乐场</a>
+  <h1>阵营<span class="accent">连</span><span class="accent2">线</span></h1>
+  <p class="tagline">16 个角色 · 找出 4 组共同点</p>
+</header>
+
+<main>
+  <section class="view">
+    <p class="pixel-hint">点选 4 个角色提交，他们必须共享同一个「共同点」（阵营/命途/元素/体型/实装版本）。连对 4 组获胜，最多错 4 次。</p>
+    <p class="conn-mistakes" id="connStatus"></p>
+    <div class="conn-solved" id="connSolved"></div>
+    <div class="conn-board" id="connBoard"></div>
+    <div class="conn-actions">
+      <button class="btn" id="connSubmit" disabled>提交</button>
+      <button class="btn ghost" id="connClear">取消选择</button>
+      <button class="btn ghost" id="connPracticeBtn">换一题练习</button>
+      <button class="btn ghost hidden" id="connBackBtn">返回每日题</button>
+    </div>
+    <div id="connResult" class="result hidden"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>非官方粉丝同人作品，与米哈游（HoYoverse）无关。角色素材版权归原厂商所有；数据来自 StarRailRes / BWIKI。</p>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+<script src="data/characters.js"></script>
+<script src="data/connections.js"></script>
+<script src="game.js"></script>
+<script src="links.js"></script>
+</body>
+</html>

@@ -1,33 +1,35 @@
-# 猜！星！铁！
+# 星铁游乐场
 
-崩坏：星穹铁道「每日猜角色」网页小游戏（非官方粉丝同人）。对标 loldle.net 的玩法，补齐了**每日一题**与**成绩分享卡**两个增长引擎。纯静态、无构建步骤。
+崩坏：星穹铁道粉丝小游戏合集（非官方同人）。纯静态、无构建步骤，双击 `index.html` 或任意静态服务器即可跑。
 
-## 玩法
+## 玩法一览
 
-- **每日挑战**：按本地日期确定性出题，同一天所有访客答案相同，6 次猜测机会，进度存 localStorage，刷新不丢。
-- **无限模式**：随机出题，随便玩，不计入每日成绩。
-- **像素立绘（独立玩法）**：独立的每日题目（与每日挑战种子不同、答案不同），看重度像素化的立绘猜角色，每猜错一次清晰一档，共 6 档 = 6 次机会；进度独立存储（`srd_pixel_daily_*`），刷新不丢。「换一张练习」可玩随机题，不影响每日进度与成绩。
-- **比对维度**：性别 / 星级 / 命途 / 元素 / 实装版本 / 能量上限。
-  - 🟩 精确匹配；🟥 不对；🟧 接近（同一角色的不同形态，如「丹恒」与「丹恒•饮月」）。
-  - 数值维度（星级 / 版本 / 能量）用 ⬆️⬇️ 提示答案更高或更低。
-  - 黄泉 / 飞霄 / 遐蝶 / 白厄 / 昔涟 没有常规能量条，能量维度标记为「特殊」，只能精确匹配。
-- **分享卡**：结算后一键复制 emoji 方格成绩（属性模式 🟩🟥🟧⬆️⬇️ / 像素模式 🟥 计猜错步数、🟩 收尾）+ 评级（S/A/B/C/D/F）+「估算超越 x% 玩家」（前端按假设分布本地计算，非真实统计）。
+| 玩法 | 页面 | 说明 |
+|---|---|---|
+| 猜！星！铁！ | `classic.html` | 六维属性比对（性别/星级/命途/元素/版本/能量），每日挑战 + 无限模式 |
+| 像素立绘 | `classic.html#pixel` | 从重度像素化立绘认人，猜错一次清晰一档，独立每日题 + 练习 |
+| 语音猜人 | `voice.html` | Heardle 式：2s → 5s → 10s → 完整，6 次机会；最后一次机会给台词兜底；每日题 + 练习 |
+| 人气对决 | `duel.html` | Higher-Lower：两位角色官方视频 B站播放量谁更高，连击计分 |
+| 阵营连线 | `links.html` | NYT Connections 式：16 人分 4 组找共同点，最多错 4 次，黄绿蓝紫难度色 |
+| 版本排排坐 | `timeline.html` | 5 个角色按实装版本排序，3 次机会 |
+
+所有玩法：独立种子（每日题同一天所有人相同）、独立 localStorage 进度（刷新不丢）、独立分享卡（emoji 方格 + 一键复制）。老玩法 localStorage 键未动，旧进度不受影响。
 
 ## 本地运行
 
-方式一：直接双击 `index.html`（数据通过 `<script>` 内嵌加载，file:// 协议可跑）。
+方式一：直接双击 `index.html`（数据通过 `<script>` 内嵌加载，file:// 可跑）。
 
-方式二：任意静态服务器，例如：
+方式二：任意静态服务器：
 
 ```bash
-python3 -m http.server 8000
-# 打开 http://127.0.0.1:8000
+python3 -m http.server 8000   # 打开 http://127.0.0.1:8000
 ```
 
 ## 部署
 
-- **Cloudflare Pages**：新建 Pages 项目 → 直接上传本目录（Direct Upload），构建命令留空，输出目录填 `/`。上线后把 `game.js` 里的 `SRD.SITE_URL` 占位替换为真实域名。
-- **GitHub Pages**：push 到仓库 → Settings → Pages → 选分支根目录。同样记得替换 `SITE_URL`。
+- **GitHub Pages**：push 到仓库 → Settings → Pages → 分支根目录。
+- **Cloudflare Pages**：Direct Upload 本目录，构建命令留空。
+- 部署后把 `game.js` 里的 `SITE_URL` 改为真实域名。
 
 ## 自测
 
@@ -35,34 +37,31 @@ python3 -m http.server 8000
 node test.js
 ```
 
-覆盖：数据完整性、每日种子确定性（同日同题、一年内索引分布）、比对逻辑（含橙色接近、方向箭头、特殊能量）、评级/百分位单调性、分享卡格式、模糊搜索与消歧、像素模式种子独立性与存储键隔离、像素分享卡文案。
+覆盖：角色数据完整性、四个每日种子的确定性与相互独立性、比对逻辑、连线题库 66 题逐一唯一解暴力复验、人气数据完整性、版本排序判定、各玩法分享卡格式、搜索消歧。
+
+## 数据来源
+
+- 角色基础数据/图片：[StarRailRes](https://github.com/Mar-7th/StarRailRes)
+- 性别/实装版本/阵营/中文CV/体型/语音：[BWIKI](https://wiki.biligame.com/sr/)（MediaWiki API 抓取，脚本在 tools/）
+- 播放量：**真数据**，B站「崩坏星穹铁道」官号（mid 1340190821）空间视频列表 API（wbi 签名），取每角色播放量最高的一条角色PV/千星纪游/走近星穹，抓取日期记录在 `data/popularity.json` 的 `fetched_at` 字段并显示在页面上。校正方法：重跑 `python3 tools/fetch_popularity.py`（有 tools/bili_videos_cache.json 时只重匹配不打网络；删缓存则重抓全量，注意接口有风控，脚本已带限速与重试）。
 
 ## 目录结构
 
 ```
-index.html            页面结构
-style.css             暖纸底 + 蓝紫点缀样式
-game.js               纯逻辑层（无 DOM 依赖，node 可直接 require）
-app.js                UI 层（渲染、交互、localStorage、像素 canvas）
-data/characters.json  85 个可玩角色的完整数据（canonical）
-data/characters.js    同一份数据的 <script> 内嵌版（file:// 双击可跑）
-data/wiki_extra.json  BWIKI 抓取的性别/实装版本原始记录（含来源页）
-data/DATA_SOURCES.md  数据来源与加工说明
-assets/icons/         角色头像 128px PNG（85 张）
-assets/portraits/     角色立绘 512px JPG（85 张，已压到 <100KB/张）
-tools/                数据抓取与构建脚本（可重复执行）
-test.js               node 自测脚本
+index.html            游乐场枢纽（玩法导航）
+classic.html + app.js 六维猜角色（每日/无限）+ 像素立绘
+voice.html + voice.js 语音猜人
+duel.html + duel.js   人气对决
+links.html + links.js 阵营连线
+timeline.html + timeline.js 版本排排坐
+game.js               全部玩法的纯逻辑层（node 可直接 require）
+style.css             暖纸底 + 蓝紫点缀
+data/                 characters / voice / popularity / connections / traits（.json + 内嵌 .js）
+assets/icons|portraits|voice/  本地化素材
+tools/                全部抓取与生成脚本（可重跑，详见 data/DATA_SOURCES.md）
+test.js               node 自测
 ```
-
-## 重新生成数据
-
-```bash
-python3 tools/fetch_wiki.py   # 从 BWIKI 抓性别/实装版本 -> data/wiki_extra.json
-python3 tools/build_data.py   # 合并生成 data/characters.json + characters.js
-```
-
-图片下载与压缩步骤见 `data/DATA_SOURCES.md`。
 
 ## 声明
 
-非官方粉丝同人作品，与米哈游（HoYoverse）无关。角色形象与素材版权归原厂商所有。数据来自 StarRailRes 与 BWIKI。
+非官方粉丝同人作品，与米哈游（HoYoverse）无关。角色形象、语音、视频等素材版权归原厂商所有。数据来自 StarRailRes / BWIKI / B站官号公开数据。

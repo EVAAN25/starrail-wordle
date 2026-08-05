@@ -197,4 +197,142 @@ ok("像素分享卡：猜中/失败/练习三种文案", () => {
   console.log("---- 像素分享卡示例 ----\n" + t1 + "\n------------------------");
 });
 
+// ---------- 语音猜人 ----------
+ok("语音：种子确定性 + 片段选择确定性 + 数据完整", () => {
+  const voice = require("./data/voice.json");
+  const ids = Object.keys(voice);
+  assert(ids.length >= 20, "语音角色池过小: " + ids.length);
+  for (const [cid, v] of Object.entries(voice)) {
+    assert(v.clips.length >= 4, cid + " 片段不足");
+    for (const cl of v.clips) assert(cl.file && cl.text && cl.type, "片段缺字段 " + cid);
+  }
+  const a = SRD.voiceDailyIndex("2026-08-05", ids.length);
+  assert.strictEqual(a, SRD.voiceDailyIndex("2026-08-05", ids.length));
+  assert(a >= 0 && a < ids.length);
+  const cid = ids[a];
+  const c1 = SRD.voiceDailyClip("2026-08-05", cid, voice[cid].clips.length);
+  assert.strictEqual(c1, SRD.voiceDailyClip("2026-08-05", cid, voice[cid].clips.length));
+  assert(SRD.voiceStorageKey("2026-08-05").startsWith("srd_voice_daily_"));
+  assert(SRD.VOICE_LEVELS[3] === Infinity);
+});
+
+ok("语音：分享卡文案与 emoji", () => {
+  const t = SRD.buildVoiceShareText({ date: "2026-08-05", tries: 3, won: true, practice: false });
+  const lines = t.split("\n");
+  assert(lines[0].includes("语音猜人 #2026-08-05") && lines[0].includes("3/6"));
+  assert.strictEqual(lines[1], "🔊🟥🔊🟥🔊🟩");
+  const t2 = SRD.buildVoiceShareText({ date: "2026-08-05", tries: 1, won: true, practice: true });
+  assert(t2.includes("练习") && !t2.includes("评级"));
+});
+
+// ---------- 人气对决 ----------
+ok("人气对决：数据完整 + 洗牌确定性", () => {
+  const pop = require("./data/popularity.json");
+  assert(pop.fetched_at && pop.source.includes("1340190821"));
+  assert.strictEqual(pop.estimated, false, "应为真数据");
+  const ids = Object.keys(pop.data);
+  assert(ids.length >= 60, "题池过小: " + ids.length);
+  const charIds = new Set(characters.map((c) => c.id));
+  for (const [cid, v] of Object.entries(pop.data)) {
+    assert(charIds.has(cid), "未知角色 " + cid);
+    assert(Number.isInteger(v.views) && v.views > 0, "views 非法 " + cid);
+    assert(v.title && v.bvid, "缺标题 " + cid);
+  }
+  const o1 = SRD.duelOrder("seed1", ids);
+  const o2 = SRD.duelOrder("seed1", ids);
+  assert.deepStrictEqual(o1, o2);
+  assert.strictEqual(new Set(o1).size, ids.length, "洗牌必须是排列");
+  const s = SRD.buildDuelShareText(7);
+  assert(s.includes("连胜 7 场"));
+});
+
+// ---------- 阵营连线 ----------
+function connDimGetters() {
+  const traits = require("./data/traits.json");
+  const byId = Object.fromEntries(characters.map((c) => [c.id, c]));
+  return {
+    path: (id) => byId[id].path,
+    element: (id) => byId[id].element,
+    faction: (id) => traits[id].faction,
+    body: (id) => traits[id].body,
+    version: (id) => byId[id].version.split(".")[0] + ".x",
+  };
+}
+function connShares(quad, getters) {
+  for (const g of Object.values(getters)) {
+    if (quad.every((id) => g(id) === g(quad[0]))) return true;
+  }
+  return false;
+}
+function connSolutions(ids, getters) {
+  // 暴力枚举 4×4 分组，找到 2 个解就提前返回
+  const sols = [];
+  const rest = ids.slice().sort();
+  (function rec(rem, groups) {
+    if (sols.length > 1) return;
+    if (!rem.length) { sols.push(groups); return; }
+    const first = rem[0];
+    for (let a = 1; a < rem.length - 2; a++)
+      for (let b = a + 1; b < rem.length - 1; b++)
+        for (let c = b + 1; c < rem.length; c++) {
+          const quad = [first, rem[a], rem[b], rem[c]];
+          if (!connShares(quad, getters)) continue;
+          rec(rem.filter((x) => !quad.includes(x)), groups.concat([quad]));
+          if (sols.length > 1) return;
+        }
+  })(rest, []);
+  return sols.length;
+}
+
+ok("连线：题库结构完整 + 每题唯一解", () => {
+  const puzzles = require("./data/connections.json");
+  assert(puzzles.length >= 60, "题库不足 60: " + puzzles.length);
+  const charIds = new Set(characters.map((c) => c.id));
+  const getters = connDimGetters();
+  for (let i = 0; i < puzzles.length; i++) {
+    const p = puzzles[i];
+    assert.strictEqual(p.groups.length, 4, `题 ${i} 组数`);
+    const all = p.groups.flatMap((g) => g.members);
+    assert.strictEqual(new Set(all).size, 16, `题 ${i} 16 人互不相同`);
+    all.forEach((id) => assert(charIds.has(id), `题 ${i} 未知 id ${id}`));
+    for (const g of p.groups) {
+      assert.strictEqual(g.members.length, 4);
+      assert(connShares(g.members, getters), `题 ${i} 组不共享维度: ${g.label}`);
+      const dims = new Set(p.groups.map((x) => x.dim));
+      assert.strictEqual(dims.size, 4, `题 ${i} 维度重复`);
+    }
+    assert.strictEqual(connSolutions(all, getters), 1, `题 ${i} 不是唯一解`);
+  }
+});
+
+ok("连线：每日种子确定性 + 方格行 + 分享卡", () => {
+  const puzzles = require("./data/connections.json");
+  const a = SRD.connDailyIndex("2026-08-05", puzzles.length);
+  assert.strictEqual(a, SRD.connDailyIndex("2026-08-05", puzzles.length));
+  assert(SRD.connStorageKey("2026-08-05").startsWith("srd_conn_daily_"));
+  const p = puzzles[a];
+  const row = SRD.connRowColors(p, p.groups[2].members);
+  assert(row.every((e) => e === SRD.CONN_COLORS[2]), "同组应同色: " + row);
+  const mixed = SRD.connRowColors(p, [p.groups[0].members[0], p.groups[1].members[0], p.groups[2].members[0], p.groups[3].members[0]]);
+  assert.strictEqual(new Set(mixed).size, 4, "跨组应四色: " + mixed);
+  const text = SRD.buildConnShareText({ date: "2026-08-05", rows: [mixed, row], won: true, practice: false });
+  assert(text.includes("阵营连线 #2026-08-05") && text.split("\n").length === 4);
+});
+
+// ---------- 版本排排坐 ----------
+ok("排排坐：每日抽题确定性 + 版本互不相同 + 判定", () => {
+  const byId = Object.fromEntries(characters.map((c) => [c.id, c]));
+  const p1 = SRD.timelineDailyPicks("2026-08-05", characters);
+  const p2 = SRD.timelineDailyPicks("2026-08-05", characters);
+  assert.deepStrictEqual(p1, p2);
+  assert.strictEqual(p1.length, 5);
+  assert.strictEqual(new Set(p1.map((id) => byId[id].version)).size, 5, "版本必须互不相同");
+  const sorted = p1.slice().sort((a, b) => SRD.versionNum(byId[a].version) - SRD.versionNum(byId[b].version));
+  assert(SRD.timelineJudge(sorted, byId));
+  assert(!SRD.timelineJudge(sorted.slice().reverse(), byId));
+  assert(SRD.timelineStorageKey("2026-08-05").startsWith("srd_tl_daily_"));
+  const t = SRD.buildTimelineShareText({ date: "2026-08-05", tries: 2, won: true, practice: false });
+  assert(t.includes("版本排排坐 #2026-08-05") && t.includes("🟥🟩"));
+});
+
 console.log(`\n全部通过：${passed} 项`);

@@ -456,6 +456,8 @@
     bindPixelInput();
     document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.tab)));
     renderGame();
+    if (location.hash === "#pixel") switchTab("pixel");
+    else if (location.hash === "#infinite") switchTab("infinite");
   }
 
   init().catch((e) => {

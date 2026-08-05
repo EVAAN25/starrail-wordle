@@ -172,6 +172,111 @@
     return lines.join("\n");
   }
 
+  // ---------- 玩法扩展：语音猜人 / 人气对决 / 阵营连线 / 版本排排坐 ----------
+
+  const HUB_NAME = "星铁游乐场";
+
+  // 语音猜人（Heardle 式）
+  const VOICE_LEVELS = [2, 5, 10, Infinity]; // 猜错 0/1/2/3+ 次后解锁的秒数
+  function voiceDailyIndex(date, count) {
+    const rng = mulberry32(hash32("srdle-voice-daily:" + date));
+    return Math.floor(rng() * count);
+  }
+  function voiceDailyClip(date, cid, clipCount) {
+    const rng = mulberry32(hash32("srdle-voice-daily:" + date + ":" + cid));
+    rng(); // 第一发给题目位，第二发给选段，保证换题换段
+    return Math.floor(rng() * clipCount);
+  }
+  function voiceStorageKey(date) { return "srd_voice_daily_" + date; }
+  function buildVoiceShareText(opts) {
+    const { date, tries, won, practice } = opts;
+    const label = practice ? "语音猜人·练习" : `语音猜人 #${date}`;
+    const head = won
+      ? `我在《${HUB_NAME}》${label} 用了 ${tries}/${MAX_GUESSES} 次`
+      : `我在《${HUB_NAME}》${label} 没听出来 X/${MAX_GUESSES}`;
+    const emoji = "🔊🟥".repeat(tries - (won ? 1 : 0)) + (won ? "🔊🟩" : "");
+    const lines = [head, emoji];
+    if (!practice) lines.push(`评级 ${grade(tries, won)} · 估算超越 ${percentile(tries, won)}% 玩家（本地估算）`);
+    lines.push(SITE_URL);
+    return lines.join("\n");
+  }
+
+  // 人气对决（Higher-Lower）
+  // 返回一个确定性洗牌后的 id 序列；客户端依次取相邻两个做对决
+  function duelOrder(seedStr, ids) {
+    const rng = mulberry32(hash32("srdle-duel:" + seedStr));
+    const a = ids.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  function duelStorageKey() { return "srd_duel_best"; }
+  function buildDuelShareText(streak) {
+    return [
+      `我在《${HUB_NAME}》人气对决连胜 ${streak} 场，你能超过我吗？`,
+      "🏆".repeat(Math.min(streak, 10)) || "🥚",
+      SITE_URL,
+    ].join("\n");
+  }
+
+  // 阵营连线（NYT Connections 式）
+  const CONN_COLORS = ["🟨", "🟩", "🟦", "🟪"]; // 黄绿蓝紫 = 由易到难
+  function connDailyIndex(date, count) {
+    const rng = mulberry32(hash32("srdle-conn-daily:" + date));
+    return Math.floor(rng() * count);
+  }
+  function connStorageKey(date) { return "srd_conn_daily_" + date; }
+  // 一次提交（4 个 id）对应的方格行：每个 id 染它所属组的颜色
+  function connRowColors(puzzle, guessIds) {
+    const colorOf = {};
+    puzzle.groups.forEach((g, gi) => g.members.forEach((id) => { colorOf[id] = CONN_COLORS[gi]; }));
+    return guessIds.map((id) => colorOf[id] || "⬜");
+  }
+  function buildConnShareText(opts) {
+    const { date, rows, won, practice } = opts; // rows: 颜色 emoji 数组的数组
+    const label = practice ? "阵营连线·练习" : `阵营连线 #${date}`;
+    const head = won
+      ? `我在《${HUB_NAME}》${label} 用 ${rows.length} 步连成 4 组`
+      : `我在《${HUB_NAME}》${label} 没能连完`;
+    return [head, ...rows.map((r) => r.join("")), SITE_URL].join("\n");
+  }
+
+  // 版本排排坐（Timeline 式）：抽 5 个实装版本互不相同的角色
+  function timelineDailyPicks(date, characters) {
+    const rng = mulberry32(hash32("srdle-timeline-daily:" + date));
+    const pool = characters.slice();
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const picked = [], usedVer = new Set();
+    for (const c of pool) {
+      if (usedVer.has(c.version)) continue;
+      picked.push(c.id); usedVer.add(c.version);
+      if (picked.length === 5) break;
+    }
+    return picked;
+  }
+  // 判定：ids 顺序是否按实装版本严格递增
+  function timelineJudge(idsInOrder, byId) {
+    for (let i = 1; i < idsInOrder.length; i++) {
+      if (versionNum(byId[idsInOrder[i - 1]].version) >= versionNum(byId[idsInOrder[i]].version)) return false;
+    }
+    return true;
+  }
+  function timelineStorageKey(date) { return "srd_tl_daily_" + date; }
+  function buildTimelineShareText(opts) {
+    const { date, tries, won, practice } = opts;
+    const label = practice ? "版本排排坐·练习" : `版本排排坐 #${date}`;
+    const head = won
+      ? `我在《${HUB_NAME}》${label} 用 ${tries}/3 次排对了`
+      : `我在《${HUB_NAME}》${label} 没排对`;
+    const emoji = "🟥".repeat(tries - (won ? 1 : 0)) + (won ? "🟩" : "");
+    return [head, emoji, SITE_URL].join("\n");
+  }
+
   // ---------- 模糊搜索 ----------
   function normalize(s) {
     return String(s).replace(/[·•.\s]/g, "").toLowerCase();
@@ -201,6 +306,11 @@
     pixelDailyIndex, pixelDailyAnswer, dailyStorageKey, pixelStorageKey,
     cmpNumeric, versionNum, compare, spCell,
     grade, percentile, shareRows, buildShareText, buildPixelShareText,
+    HUB_NAME,
+    VOICE_LEVELS, voiceDailyIndex, voiceDailyClip, voiceStorageKey, buildVoiceShareText,
+    duelOrder, duelStorageKey, buildDuelShareText,
+    CONN_COLORS, connDailyIndex, connStorageKey, connRowColors, buildConnShareText,
+    timelineDailyPicks, timelineJudge, timelineStorageKey, buildTimelineShareText,
     normalize, search,
   };
 });

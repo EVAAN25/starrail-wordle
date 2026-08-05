@@ -170,3 +170,91 @@ button.btn.ghost { background: var(--card); color: var(--blue); border: 1px soli
   .row .cell.name img { width: 28px; height: 28px; }
   .grid-head { font-size: 11px; }
 }
+
+/* ---------- 游乐场枢纽 ---------- */
+.home-link { font-size: 13px; color: var(--ink-soft); text-decoration: none; }
+.home-link:hover { color: var(--blue); }
+.hub-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px; width: 100%; max-width: 720px; margin: 0 auto; padding: 0 12px 30px;
+}
+.hub-card {
+  display: block; background: var(--card); border: 1px solid var(--line);
+  border-radius: 14px; padding: 20px 18px; text-decoration: none; color: var(--ink);
+  transition: transform .15s, box-shadow .15s;
+}
+.hub-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(80,70,120,.15); }
+.hub-card h2 { font-size: 19px; margin: 8px 0 6px; }
+.hub-card p { font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+.hub-emoji { font-size: 30px; }
+
+/* ---------- 语音猜人 ---------- */
+.voice-panel { text-align: center; }
+.play-btn {
+  width: 84px; height: 84px; border-radius: 50%; border: none; cursor: pointer;
+  background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; font-size: 32px;
+  margin: 10px auto 6px; display: block;
+}
+.voice-progress { font-size: 13px; color: var(--ink-soft); margin-bottom: 12px; }
+.voice-quote {
+  background: var(--card); border: 1px dashed var(--orange); border-radius: 10px;
+  padding: 10px 14px; margin: 10px auto; max-width: 480px; font-size: 14px; color: #8a5a14;
+}
+.voice-unlocks { display: flex; gap: 6px; justify-content: center; margin: 8px 0 12px; }
+.voice-unlocks span {
+  font-size: 12px; padding: 3px 10px; border-radius: 999px;
+  background: var(--paper-deep); color: var(--ink-soft); border: 1px solid var(--line);
+}
+.voice-unlocks span.on { background: var(--green-bg); border-color: var(--green); color: #1f6b3a; }
+
+/* ---------- 人气对决 ---------- */
+.duel-stage { display: flex; gap: 12px; align-items: stretch; justify-content: center; }
+.duel-card {
+  flex: 1; max-width: 300px; background: var(--card); border: 1px solid var(--line);
+  border-radius: 14px; padding: 16px; text-align: center; cursor: pointer;
+  transition: transform .12s;
+}
+.duel-card:hover { transform: translateY(-2px); }
+.duel-card img { width: 96px; height: 96px; border-radius: 12px; background: var(--paper-deep); }
+.duel-card h3 { margin: 8px 0 4px; font-size: 17px; }
+.duel-card .views { font-size: 20px; font-weight: 700; color: var(--purple); }
+.duel-card .vtitle { font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
+.duel-vs { align-self: center; font-size: 22px; font-weight: 700; color: var(--ink-soft); }
+.duel-streak { text-align: center; font-size: 15px; margin-bottom: 12px; color: var(--ink-soft); }
+.duel-streak b { color: var(--purple); font-size: 20px; }
+
+/* ---------- 阵营连线 ---------- */
+.conn-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+.conn-card {
+  background: var(--card); border: 2px solid var(--line); border-radius: 10px;
+  padding: 10px 4px; text-align: center; font-size: 13px; cursor: pointer; user-select: none;
+  min-height: 44px; display: flex; align-items: center; justify-content: center;
+}
+.conn-card.sel { border-color: var(--blue); background: #e7ebfb; }
+.conn-card.done { pointer-events: none; color: #fff; font-weight: 600; }
+.conn-card.done small { display: block; font-weight: 400; font-size: 10px; opacity: .85; }
+.conn-card.c0 { background: #e9c46a; border-color: #e9c46a; }
+.conn-card.c1 { background: #6aad6a; border-color: #6aad6a; }
+.conn-card.c2 { background: #6a8fd0; border-color: #6a8fd0; }
+.conn-card.c3 { background: #9a6fc9; border-color: #9a6fc9; }
+.conn-mistakes { text-align: center; font-size: 14px; color: var(--ink-soft); margin: 6px 0; }
+.conn-solved { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.conn-solved .grp {
+  border-radius: 10px; padding: 8px 12px; color: #fff; font-size: 13px; text-align: center;
+}
+.conn-solved .grp.c0 { background: #e9c46a; } .conn-solved .grp.c1 { background: #6aad6a; }
+.conn-solved .grp.c2 { background: #6a8fd0; } .conn-solved .grp.c3 { background: #9a6fc9; }
+.conn-actions { display: flex; gap: 10px; justify-content: center; margin: 8px 0; }
+
+/* ---------- 版本排排坐 ---------- */
+.tl-list { display: flex; flex-direction: column; gap: 8px; margin: 12px auto; max-width: 480px; }
+.tl-item {
+  display: flex; align-items: center; gap: 10px; background: var(--card);
+  border: 2px solid var(--line); border-radius: 12px; padding: 8px 12px; cursor: pointer;
+  font-size: 15px;
+}
+.tl-item img { width: 40px; height: 40px; border-radius: 8px; background: var(--paper-deep); }
+.tl-item.sel { border-color: var(--blue); background: #e7ebfb; }
+.tl-item .pos { color: var(--ink-soft); font-size: 13px; width: 52px; }
+.tl-item .ver { margin-left: auto; color: var(--purple); font-weight: 600; }
+.tl-hint { text-align: center; font-size: 13px; color: var(--ink-soft); }
