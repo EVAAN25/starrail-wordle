@@ -6,7 +6,7 @@
 
 - 中文、纯静态、无构建步骤，双击 index.html 或任意静态服务器可跑。
 - 数据源：StarRailRes `index_min/cn/characters.json` + 同仓图片；缺失的性别/实装版本用 BWIKI MediaWiki API 补齐（30 分钟搞不定再手工映射）。
-- 功能：每日模式（本地日期种子、6 次机会、localStorage 进度）、无限模式、自动补全猜测输入、六维属性比对格（绿/红/橙/箭头）、像素立绘提示（canvas 6 档）、emoji 分享卡一键复制、评级 + 伪百分位、同人声明页脚。
+- 功能：每日模式（本地日期种子、6 次机会、localStorage 进度）、无限模式、自动补全猜测输入、六维属性比对格（绿/红/橙/箭头）、像素立绘独立玩法（独立每日种子与存储、canvas 6 档、练习模式）、emoji 分享卡一键复制、评级 + 伪百分位、同人声明页脚。
 - 工程：index.html + game.js（纯函数、node 可跑）+ data/characters.json + assets/ + README.md + node 自测 + http.server curl 验证。
 - 风格：暖纸底色 + 星铁蓝紫点缀，移动端可用；首屏资源克制，立绘按需加载。
 
@@ -30,6 +30,7 @@
 - 橙色「接近」语义 = 同一本体不同形态（丹恒×3、三月七×2、黑塔/姬子/银狼/刃×2）。
 - 立绘 PNG 转 JPG（暖纸衬底）以满足单张 <100KB；头像保留 PNG 透明。
 - 双击可跑：数据另出一份 `characters.js` 用 `<script>` 内嵌加载，规避 file:// 下 fetch 限制。
+- 像素立绘是独立玩法而非主游戏附属：独立 salt（`srdle-pixel-daily:`，同日答案与主模式不同）、独立 localStorage 键（`srd_pixel_daily_*`）、独立猜测/结算/分享流程；「换一张练习」只存在于内存，不写入存储、不影响每日成绩。
 
 ## 遗留 TODO
 

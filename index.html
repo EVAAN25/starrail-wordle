@@ -51,12 +51,23 @@
     </details>
   </section>
 
-  <!-- 像素立绘 -->
+  <!-- 像素立绘：独立玩法 -->
   <section id="view-pixel" class="view hidden">
     <div class="pixel-panel">
-      <p class="pixel-hint" id="pixelHint">每猜错一次，立绘就清晰一档。联动你最近游玩的对局。</p>
+      <p class="pixel-hint">看像素立绘猜角色：每猜错一次清晰一档，共 6 次机会。每日一题，与「每日挑战」互不影响。</p>
       <div class="pixel-stage"><canvas id="pixelCanvas" width="512" height="512"></canvas></div>
       <p class="pixel-status" id="pixelStatus"></p>
+      <div class="guess-bar">
+        <div class="input-wrap">
+          <input id="pixelInput" type="text" placeholder="输入角色名，猜这幅立绘"
+                 autocomplete="off" autocapitalize="off" spellcheck="false">
+          <ul id="pixelSuggest" class="suggest-list hidden"></ul>
+        </div>
+        <button class="btn ghost" id="practiceBtn">换一张练习</button>
+        <button class="btn ghost hidden" id="backDailyBtn">返回每日题</button>
+      </div>
+      <div id="pixelChips" class="chips"></div>
+      <div id="pixelResult" class="result hidden"></div>
     </div>
   </section>
 </main>

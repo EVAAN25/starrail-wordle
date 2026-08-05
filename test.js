@@ -145,4 +145,56 @@ ok("搜索：模糊匹配、消歧、排除已猜", () => {
   assert.strictEqual(r2.length, 0);
 });
 
+// ---------- 像素立绘模式（独立玩法） ----------
+ok("像素种子：同一天多次计算结果一致", () => {
+  const a = SRD.pixelDailyAnswer("2026-08-05", characters);
+  const b = SRD.pixelDailyAnswer("2026-08-05", characters);
+  assert.strictEqual(a.id, b.id);
+});
+
+ok("像素种子：与主每日种子相互独立（一年内大量日期答案不同）", () => {
+  let diff = 0;
+  const d = new Date(2026, 0, 1);
+  for (let i = 0; i < 365; i++) {
+    const ds = SRD.dateStr(d);
+    const main = SRD.dailyIndex(ds, characters.length);
+    const pixel = SRD.pixelDailyIndex(ds, characters.length);
+    assert(pixel >= 0 && pixel < characters.length);
+    if (main !== pixel) diff++;
+    d.setDate(d.getDate() + 1);
+  }
+  assert(diff > 300, `一年仅 ${diff} 天答案不同，种子可能未独立`);
+});
+
+ok("像素存储键：与主游戏完全分开", () => {
+  const dk = SRD.dailyStorageKey("2026-08-05");
+  const pk = SRD.pixelStorageKey("2026-08-05");
+  assert.notStrictEqual(dk, pk);
+  assert(pk.startsWith("srd_pixel_daily_"));
+  assert(dk.startsWith("srdle.daily."));
+});
+
+ok("像素练习模式：抽练习題不影响每日答案与存储键", () => {
+  const date = "2026-08-05";
+  const before = SRD.pixelDailyAnswer(date, characters);
+  const keyBefore = SRD.pixelStorageKey(date);
+  // 模拟练习抽题（随机）后，每日题与键不变
+  for (let i = 0; i < 10; i++) Math.random();
+  assert.strictEqual(SRD.pixelDailyAnswer(date, characters).id, before.id);
+  assert.strictEqual(SRD.pixelStorageKey(date), keyBefore);
+});
+
+ok("像素分享卡：猜中/失败/练习三种文案", () => {
+  const t1 = SRD.buildPixelShareText({ date: "2026-08-05", tries: 3, won: true, practice: false });
+  const l1 = t1.split("\n");
+  assert(l1[0].includes("像素立绘 #2026-08-05") && l1[0].includes("3/6"));
+  assert.strictEqual(l1[1], "🟥🟥🟩");           // 错 2 步 + 猜中
+  assert(l1[2].includes("评级"));
+  const t2 = SRD.buildPixelShareText({ date: "2026-08-05", tries: 6, won: false, practice: false });
+  assert(t2.includes("X/6") && t2.split("\n")[1] === "🟥🟥🟥🟥🟥🟥");
+  const t3 = SRD.buildPixelShareText({ date: "2026-08-05", tries: 1, won: true, practice: true });
+  assert(t3.includes("练习") && !t3.includes("评级") && t3.split("\n")[1] === "🟩");
+  console.log("---- 像素分享卡示例 ----\n" + t1 + "\n------------------------");
+});
+
 console.log(`\n全部通过：${passed} 项`);

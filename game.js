@@ -53,6 +53,20 @@
     return characters[dailyIndex(date, characters.length)];
   }
 
+  // 像素立绘模式：独立 salt，与主每日模式同一天答案一般不同
+  function pixelDailyIndex(date, count) {
+    const rng = mulberry32(hash32("srdle-pixel-daily:" + date));
+    return Math.floor(rng() * count);
+  }
+
+  function pixelDailyAnswer(date, characters) {
+    return characters[pixelDailyIndex(date, characters.length)];
+  }
+
+  // localStorage 键：主游戏与像素模式完全分开
+  function dailyStorageKey(date) { return "srdle.daily." + date; }
+  function pixelStorageKey(date) { return "srd_pixel_daily_" + date; }
+
   // ---------- 比对逻辑 ----------
 
   // 数值维度：0 相等；1 目标更高（提示 ↑）；-1 目标更低（提示 ↓）
@@ -142,8 +156,23 @@
     return lines.join("\n");
   }
 
-  // ---------- 模糊搜索 ----------
+  // 像素立绘模式分享卡：🟥=猜错一步，🟩=最终猜中
+  function buildPixelShareText(opts) {
+    const { date, tries, won, practice } = opts;
+    const label = practice ? "像素立绘·练习" : `像素立绘 #${date}`;
+    const head = won
+      ? `我在《${SITE_NAME}》${label} 用了 ${tries}/${MAX_GUESSES} 次`
+      : `我在《${SITE_NAME}》${label} 没能猜出来 X/${MAX_GUESSES}`;
+    const emoji = "🟥".repeat(tries - (won ? 1 : 0)) + (won ? "🟩" : "");
+    const lines = [head, emoji];
+    if (!practice) {
+      lines.push(`评级 ${grade(tries, won)} · 估算超越 ${percentile(tries, won)}% 玩家（本地估算）`);
+    }
+    lines.push(SITE_URL);
+    return lines.join("\n");
+  }
 
+  // ---------- 模糊搜索 ----------
   function normalize(s) {
     return String(s).replace(/[·•.\s]/g, "").toLowerCase();
   }
@@ -169,8 +198,9 @@
     MAX_GUESSES, SITE_NAME, SITE_URL,
     CELL_ORDER, CELL_LABEL, CELL_EMOJI, DIST,
     hash32, mulberry32, dateStr, dailyIndex, dailyAnswer,
+    pixelDailyIndex, pixelDailyAnswer, dailyStorageKey, pixelStorageKey,
     cmpNumeric, versionNum, compare, spCell,
-    grade, percentile, shareRows, buildShareText,
+    grade, percentile, shareRows, buildShareText, buildPixelShareText,
     normalize, search,
   };
 });

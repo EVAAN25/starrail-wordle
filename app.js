@@ -10,7 +10,6 @@
   let byId = {};
   let modes = {};          // daily / infinite 的对局状态
   let activeGame = "daily";
-  let pixelSource = "daily";
   let suggestIndex = -1;
   let suggestItems = [];
 
@@ -35,7 +34,7 @@
     return { targetId: target.id, guesses: [], results: [], status: "playing" };
   }
 
-  function todayKey() { return "srdle.daily." + SRD.dateStr(); }
+  function todayKey() { return SRD.dailyStorageKey(SRD.dateStr()); }
 
   function initDaily() {
     const date = SRD.dateStr();
@@ -167,16 +166,19 @@
     const ag = $("#againBtn"); if (ag) ag.onclick = () => { initInfinite(); renderGame(); };
   }
 
-  function copyShare() {
-    const s = state();
-    const text = SRD.buildShareText({
-      date: SRD.dateStr(), results: s.results,
-      tries: s.guesses.length, won: s.status === "won", mode: activeGame,
-    });
+  function copyText(text) {
     const done = () => toast("分享卡已复制，去群里粘贴吧");
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
     } else fallbackCopy(text, done);
+  }
+
+  function copyShare() {
+    const s = state();
+    copyText(SRD.buildShareText({
+      date: SRD.dateStr(), results: s.results,
+      tries: s.guesses.length, won: s.status === "won", mode: activeGame,
+    }));
   }
 
   function fallbackCopy(text, done) {
@@ -196,7 +198,6 @@
     const res = SRD.compare(byId[id], target());
     s.guesses.push(id);
     s.results.push(res);
-    pixelSource = activeGame;
     if (res.win) {
       s.status = "won";
       if (activeGame === "daily") updateStats(true);
@@ -265,21 +266,40 @@
     });
   }
 
-  // ---------- 像素立绘 ----------
+  // ---------- 像素立绘（独立玩法：独立题目 / 独立流程 / 独立存储） ----------
 
   const portraitCache = {};
+  let pixelDaily = null;     // 每日题 {targetId, guesses, status}，持久化到 srd_pixel_daily_*
+  let pixelPractice = null;  // 练习题，只在内存，不进存储
+  let inPractice = false;
+  let pSugIndex = -1, pSugItems = [];
 
-  function renderPixel() {
-    const s = modes[pixelSource];
+  function initPixelDaily() {
+    const date = SRD.dateStr();
+    const t = SRD.pixelDailyAnswer(date, characters);
+    const saved = loadJSON(SRD.pixelStorageKey(date), null);
+    pixelDaily = saved && saved.targetId === t.id
+      ? saved
+      : { targetId: t.id, guesses: [], status: "playing" };
+  }
+
+  function pixelState() { return inPractice ? pixelPractice : pixelDaily; }
+
+  function persistPixel() {
+    if (!inPractice) store.set(SRD.pixelStorageKey(SRD.dateStr()), JSON.stringify(pixelDaily));
+  }
+
+  function pixelWrongCount() {
+    const s = pixelState();
+    return s.guesses.filter((id) => id !== s.targetId).length;
+  }
+
+  function drawPixel() {
+    const s = pixelState();
+    const t = byId[s.targetId];
+    const level = s.status === "won" ? PIXEL_FACTORS.length - 1 : Math.min(pixelWrongCount(), PIXEL_FACTORS.length - 1);
     const canvas = $("#pixelCanvas");
     const ctx = canvas.getContext("2d");
-    const t = byId[s.targetId];
-    const wrong = s.guesses.filter((id) => id !== s.targetId).length;
-    const level = s.status === "won" ? PIXEL_FACTORS.length - 1 : Math.min(wrong, PIXEL_FACTORS.length - 1);
-    $("#pixelStatus").textContent =
-      (pixelSource === "daily" ? "每日挑战" : "无限模式") +
-      ` · 已猜错 ${wrong} 次 · 清晰度 ${level + 1}/${PIXEL_FACTORS.length}` +
-      (s.status === "won" ? " · 已揭晓" : "");
     const img = portraitCache[t.id] || (portraitCache[t.id] = new Image());
     img.onload = () => {
       const f = PIXEL_FACTORS[level];
@@ -294,6 +314,110 @@
     };
     if (img.complete && img.naturalWidth) img.onload();
     else img.src = t.portrait;
+  }
+
+  function renderPixel() {
+    const s = pixelState();
+    const left = SRD.MAX_GUESSES - s.guesses.length;
+    $("#pixelStatus").textContent =
+      (inPractice ? "练习模式 · 不影响每日进度" : `像素每日题 #${SRD.dateStr()}`) +
+      (s.status === "playing" ? ` · 剩 ${left}/${SRD.MAX_GUESSES} 次` : s.status === "won" ? " · 已猜中" : " · 已揭晓");
+    $("#practiceBtn").textContent = inPractice ? "再换一张" : "换一张练习";
+    $("#backDailyBtn").classList.toggle("hidden", !inPractice);
+    $("#pixelChips").innerHTML = s.guesses.map((id) =>
+      `<span class="chip ${id === s.targetId ? "hit" : "wrong"}">${byId[id].display}</span>`).join("");
+    $("#pixelInput").disabled = s.status !== "playing";
+    drawPixel();
+    if (s.status !== "playing") renderPixelResult();
+    else $("#pixelResult").classList.add("hidden");
+    closePixelSuggest();
+  }
+
+  function renderPixelResult() {
+    const s = pixelState();
+    const t = byId[s.targetId];
+    const won = s.status === "won";
+    const tries = s.guesses.length;
+    $("#pixelResult").innerHTML = `
+      <h2>${won ? "猜中了！" : "揭晓答案"}：${t.display}</h2>
+      <p class="r-meta">${t.rarity}★ · ${t.gender} · ${t.path} · ${t.element} · v${t.version} · 能量 ${t.max_sp == null ? "特殊" : t.max_sp}</p>
+      <p class="r-grade">${tries}/${SRD.MAX_GUESSES} 次 · 评级 <b>${SRD.grade(tries, won)}</b></p>
+      <p class="r-pct">${won && !inPractice ? `估算超越 ${SRD.percentile(tries, won)}% 的玩家（本地估算）` : ""}</p>
+      <div class="btn-row"><button class="btn" id="pixelShareBtn">复制分享卡</button></div>`;
+    $("#pixelResult").classList.remove("hidden");
+    $("#pixelShareBtn").onclick = () =>
+      copyText(SRD.buildPixelShareText({ date: SRD.dateStr(), tries, won, practice: inPractice }));
+  }
+
+  function submitPixelGuess(id) {
+    const s = pixelState();
+    if (s.status !== "playing") return;
+    if (s.guesses.includes(id)) { toast("这个角色已经猜过了"); return; }
+    s.guesses.push(id);
+    if (id === s.targetId) s.status = "won";
+    else if (s.guesses.length >= SRD.MAX_GUESSES) s.status = "lost";
+    persistPixel();
+    renderPixel();
+  }
+
+  // 像素页自动补全（与主游戏同一套交互，独立 DOM）
+  function openPixelSuggest(list) {
+    pSugItems = list;
+    pSugIndex = list.length ? 0 : -1;
+    const ul = $("#pixelSuggest");
+    ul.innerHTML = list.map((c, i) => `
+      <li data-id="${c.id}" class="${i === pSugIndex ? "active" : ""}">
+        <img loading="lazy" src="${c.icon}" alt="">
+        <span class="s-name">${c.display}</span>
+        <span class="s-meta">${c.rarity}★ ${c.path}·${c.element}</span>
+      </li>`).join("");
+    ul.classList.toggle("hidden", !list.length);
+    ul.querySelectorAll("li").forEach((li) => {
+      li.addEventListener("pointerdown", (e) => { e.preventDefault(); pickPixel(li.dataset.id); });
+    });
+  }
+
+  function closePixelSuggest() { $("#pixelSuggest").classList.add("hidden"); pSugItems = []; pSugIndex = -1; }
+
+  function movePixelSuggest(delta) {
+    if (!pSugItems.length) return;
+    pSugIndex = (pSugIndex + delta + pSugItems.length) % pSugItems.length;
+    $("#pixelSuggest").querySelectorAll("li").forEach((li, i) => li.classList.toggle("active", i === pSugIndex));
+  }
+
+  function pickPixel(id) {
+    $("#pixelInput").value = "";
+    closePixelSuggest();
+    submitPixelGuess(id);
+  }
+
+  function bindPixelInput() {
+    const input = $("#pixelInput");
+    const exclude = () => pixelState().guesses;
+    input.addEventListener("input", () => openPixelSuggest(SRD.search(characters, input.value, exclude())));
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") { e.preventDefault(); movePixelSuggest(1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); movePixelSuggest(-1); }
+      else if (e.key === "Enter") {
+        e.preventDefault();
+        if (pSugItems.length) pickPixel(pSugItems[Math.max(pSugIndex, 0)].id);
+        else {
+          const m = SRD.search(characters, input.value, exclude(), 1);
+          if (m.length) pickPixel(m[0].id);
+        }
+      } else if (e.key === "Escape") closePixelSuggest();
+    });
+    input.addEventListener("blur", () => setTimeout(closePixelSuggest, 120));
+    input.addEventListener("focus", () => {
+      if (input.value) openPixelSuggest(SRD.search(characters, input.value, exclude()));
+    });
+    $("#practiceBtn").addEventListener("click", () => {
+      inPractice = true;
+      const t = characters[Math.floor(Math.random() * characters.length)];
+      pixelPractice = { targetId: t.id, guesses: [], status: "playing" };
+      renderPixel();
+    });
+    $("#backDailyBtn").addEventListener("click", () => { inPractice = false; renderPixel(); });
   }
 
   // ---------- 标签页 ----------
@@ -327,7 +451,9 @@
     else characters = await (await fetch("data/characters.json")).json();
     characters.forEach((c) => { byId[c.id] = c; });
     initDaily();
+    initPixelDaily();
     bindInput();
+    bindPixelInput();
     document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.tab)));
     renderGame();
   }
