@@ -59,13 +59,13 @@ main { width: 100%; max-width: 720px; padding: 0 12px 40px; flex: 1; }
 /* 输入区 */
 .guess-bar { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; }
 .input-wrap { position: relative; flex: 1; }
-#guessInput {
+#guessInput, #pixelInput {
   width: 100%; padding: 12px 14px; font-size: 16px;
   border: 2px solid var(--line); border-radius: var(--radius);
   background: var(--card); color: var(--ink); outline: none;
 }
-#guessInput:focus { border-color: var(--blue); }
-#guessInput:disabled { opacity: .5; }
+#guessInput:focus, #pixelInput:focus { border-color: var(--blue); }
+#guessInput:disabled, #pixelInput:disabled { opacity: .5; }
 .tries-left { padding: 12px 4px; font-size: 14px; color: var(--ink-soft); white-space: nowrap; }
 .tries-left b { color: var(--purple); font-size: 18px; }
 
@@ -141,7 +141,8 @@ button.btn.ghost { background: var(--card); color: var(--blue); border: 1px soli
 }
 #pixelCanvas { width: min(420px, 86vw); height: auto; border-radius: 8px; image-rendering: pixelated; }
 .pixel-status { margin-top: 10px; font-size: 14px; color: var(--ink-soft); }
-.pixel-panel .guess-bar { margin-top: 12px; max-width: 560px; margin-left: auto; margin-right: auto; }
+.pixel-panel .guess-bar { margin-top: 12px; max-width: 560px; margin-left: auto; margin-right: auto; flex-wrap: wrap; }
+.pixel-panel .guess-bar .input-wrap { flex: 1 1 240px; }
 .pixel-panel .guess-bar .btn { white-space: nowrap; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; }
 .chip { padding: 4px 12px; border-radius: 999px; font-size: 13px; border: 1px solid; }
