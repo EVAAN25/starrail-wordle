@@ -129,6 +129,10 @@ ok("分享卡：失败与无限模式文案", () => {
   assert(t1.includes("X/6"));
   const t2 = SRD.buildShareText({ date: "2026-08-05", results: r, tries: 1, won: true, mode: "infinite" });
   assert(t2.includes("无限模式") && !t2.includes("评级"));
+  // 无限模式输赢都应有分享卡（含 emoji 行与 URL）
+  const t3 = SRD.buildShareText({ date: "2026-08-05", results: r, tries: 6, won: false, mode: "infinite" });
+  assert(t3.includes("无限模式") && t3.includes("X/6") && t3.includes("http"));
+  assert(t3.split("\n").length >= 3, "无限模式失败分享卡也应有格子行");
 });
 
 // ---------- 搜索 ----------

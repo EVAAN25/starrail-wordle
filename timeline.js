@@ -109,16 +109,29 @@
     render();
   }
 
+  function newPracticeRound() {
+    inPractice = true;
+    const picks = randomPicks();
+    practice = { picks, order: shuffle(picks, Math.random), tries: 0, status: "playing" };
+    selIdx = -1;
+    render();
+  }
+
   function renderResult() {
     const s = state();
     const won = s.status === "won";
     $("#tlResult").innerHTML = `
       <h2>${won ? `排对了！用 ${s.tries}/${MAX_TRIES} 次` : "正确答案已亮出"}</h2>
       <p class="r-meta">${s.order.map((id) => `${byId[id].display} v${byId[id].version}`).join(" → ")}</p>
-      <div class="btn-row"><button class="btn" id="tlShareBtn">复制分享卡</button></div>`;
+      <div class="btn-row">
+        <button class="btn" id="tlAgainBtn">再来一组（随机）</button>
+        <button class="btn ghost" id="tlShareBtn">复制分享卡</button>
+      </div>
+      ${!inPractice ? '<p class="r-stats">每日题已完成，可以一直玩随机题 · 成绩与分享卡已定格</p>' : ""}`;
     $("#tlResult").classList.remove("hidden");
     $("#tlShareBtn").onclick = () =>
       copyText(SRD.buildTimelineShareText({ date: SRD.dateStr(), tries: s.tries, won, practice: inPractice }));
+    $("#tlAgainBtn").onclick = () => newPracticeRound();
   }
 
   function copyText(text) {
@@ -143,13 +156,7 @@
   }
 
   $("#tlSubmit").addEventListener("click", submit);
-  $("#tlPracticeBtn").addEventListener("click", () => {
-    inPractice = true;
-    const picks = randomPicks();
-    practice = { picks, order: shuffle(picks, Math.random), tries: 0, status: "playing" };
-    selIdx = -1;
-    render();
-  });
+  $("#tlPracticeBtn").addEventListener("click", () => newPracticeRound());
   $("#tlBackBtn").addEventListener("click", () => { inPractice = false; selIdx = -1; render(); });
 
   initDaily();

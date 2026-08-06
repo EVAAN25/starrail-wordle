@@ -49,12 +49,12 @@
 
   function cardHTML(id, side) {
     const c = byId[id], p = pop.data[id];
-    const show = side === "left" || revealed;
+    const showViews = side === "left" || revealed;
     return `<div class="duel-card" data-side="${side}">
       <img src="${c.icon}" alt="">
       <h3>${c.display}</h3>
-      ${show ? `<div class="views">${fmt(p.views)} 播放</div><div class="vtitle">${p.title}</div>`
-             : `<div class="views">？播放</div><div class="vtitle">点击选择更高的一方</div>`}
+      ${showViews ? `<div class="views">${fmt(p.views)} 播放</div>` : `<div class="views">？播放</div>`}
+      <div class="vtitle">${p.title}</div>
     </div>`;
   }
 

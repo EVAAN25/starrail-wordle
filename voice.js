@@ -110,10 +110,24 @@
       <p class="r-meta">语音「${cl.type}」：${cl.text}</p>
       <p class="r-grade">${tries}/${SRD.MAX_GUESSES} 次 · 评级 <b>${SRD.grade(tries, won)}</b></p>
       <p class="r-pct">${won && !inPractice ? `估算超越 ${SRD.percentile(tries, won)}% 的玩家（本地估算）` : ""}</p>
-      <div class="btn-row"><button class="btn" id="vShareBtn">复制分享卡</button></div>`;
+      <div class="btn-row">
+        <button class="btn" id="vAgainBtn">再听一条（随机）</button>
+        <button class="btn ghost" id="vShareBtn">复制分享卡</button>
+      </div>
+      ${!inPractice ? '<p class="r-stats">每日题已完成，可以一直听随机题 · 成绩与分享卡已定格</p>' : ""}`;
     $("#vResult").classList.remove("hidden");
     $("#vShareBtn").onclick = () =>
       copyText(SRD.buildVoiceShareText({ date: SRD.dateStr(), tries, won, practice: inPractice }));
+    $("#vAgainBtn").onclick = () => newPractice();
+  }
+
+  function newPractice() {
+    inPractice = true;
+    const cid = eligible[Math.floor(Math.random() * eligible.length)];
+    const clips = voice[cid].clips;
+    practice = { cid, clipN: clips[Math.floor(Math.random() * clips.length)].n, guesses: [], status: "playing" };
+    audio.pause(); audio.removeAttribute("src");
+    render();
   }
 
   // ---------- 猜测 ----------
@@ -191,14 +205,7 @@
       if (audio.paused) playCurrent();
       else { audio.pause(); $("#playBtn").textContent = "▶"; }
     });
-    $("#vPracticeBtn").addEventListener("click", () => {
-      inPractice = true;
-      const cid = eligible[Math.floor(Math.random() * eligible.length)];
-      const clips = voice[cid].clips;
-      practice = { cid, clipN: clips[Math.floor(Math.random() * clips.length)].n, guesses: [], status: "playing" };
-      audio.pause(); audio.removeAttribute("src");
-      render();
-    });
+    $("#vPracticeBtn").addEventListener("click", () => newPractice());
     $("#vBackBtn").addEventListener("click", () => {
       inPractice = false; audio.pause(); audio.removeAttribute("src"); render();
     });

@@ -154,15 +154,16 @@
       <p class="r-grade">${tries}/${SRD.MAX_GUESSES} 次 · 评级 <b>${g}</b></p>
       <p class="r-pct">${won ? `估算超越 ${pct}% 的玩家（本地估算）` : "明天再来一局！"}</p>
       <div class="btn-row">
-        <button class="btn" id="shareBtn">复制分享卡</button>
         ${activeGame === "daily"
-          ? '<button class="btn ghost" id="goInfiniteBtn">去无限模式接着玩</button>'
-          : '<button class="btn ghost" id="againBtn">再来一局</button>'}
+          ? '<button class="btn" id="goInfiniteBtn">再来一题（随机）</button>'
+          : '<button class="btn" id="againBtn">再来一局</button>'}
+        <button class="btn ghost" id="shareBtn">复制分享卡</button>
       </div>
+      ${activeGame === "daily" ? '<p class="r-stats">每日题已完成，可以一直玩随机题 · 成绩与分享卡已定格</p>' : ""}
       ${statLine ? `<p class="r-stats">${statLine}</p>` : ""}`;
     $("#result").classList.remove("hidden");
     $("#shareBtn").onclick = copyShare;
-    const gi = $("#goInfiniteBtn"); if (gi) gi.onclick = () => switchTab("infinite");
+    const gi = $("#goInfiniteBtn"); if (gi) gi.onclick = () => { initInfinite(); switchTab("infinite"); };
     const ag = $("#againBtn"); if (ag) ag.onclick = () => { initInfinite(); renderGame(); };
   }
 
@@ -343,10 +344,22 @@
       <p class="r-meta">${t.rarity}★ · ${t.gender} · ${t.path} · ${t.element} · v${t.version} · 能量 ${t.max_sp == null ? "特殊" : t.max_sp}</p>
       <p class="r-grade">${tries}/${SRD.MAX_GUESSES} 次 · 评级 <b>${SRD.grade(tries, won)}</b></p>
       <p class="r-pct">${won && !inPractice ? `估算超越 ${SRD.percentile(tries, won)}% 的玩家（本地估算）` : ""}</p>
-      <div class="btn-row"><button class="btn" id="pixelShareBtn">复制分享卡</button></div>`;
+      <div class="btn-row">
+        <button class="btn" id="pixelAgainBtn">再来一题（随机）</button>
+        <button class="btn ghost" id="pixelShareBtn">复制分享卡</button>
+      </div>
+      ${!inPractice ? '<p class="r-stats">每日题已完成，可以一直玩随机题 · 成绩与分享卡已定格</p>' : ""}`;
     $("#pixelResult").classList.remove("hidden");
     $("#pixelShareBtn").onclick = () =>
       copyText(SRD.buildPixelShareText({ date: SRD.dateStr(), tries, won, practice: inPractice }));
+    $("#pixelAgainBtn").onclick = () => newPixelPractice();
+  }
+
+  function newPixelPractice() {
+    inPractice = true;
+    const t = characters[Math.floor(Math.random() * characters.length)];
+    pixelPractice = { targetId: t.id, guesses: [], status: "playing" };
+    renderPixel();
   }
 
   function submitPixelGuess(id) {
@@ -411,12 +424,7 @@
     input.addEventListener("focus", () => {
       if (input.value) openPixelSuggest(SRD.search(characters, input.value, exclude()));
     });
-    $("#practiceBtn").addEventListener("click", () => {
-      inPractice = true;
-      const t = characters[Math.floor(Math.random() * characters.length)];
-      pixelPractice = { targetId: t.id, guesses: [], status: "playing" };
-      renderPixel();
-    });
+    $("#practiceBtn").addEventListener("click", () => newPixelPractice());
     $("#backDailyBtn").addEventListener("click", () => { inPractice = false; renderPixel(); });
   }
 

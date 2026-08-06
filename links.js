@@ -111,16 +111,28 @@
     render();
   }
 
+  function newPracticeRound() {
+    inPractice = true;
+    practice = newState(Math.floor(Math.random() * puzzles.length), null);
+    selected = [];
+    render();
+  }
+
   function renderResult() {
     const s = state();
     const won = s.status === "won";
     $("#connResult").innerHTML = `
       <h2>${won ? `连成 4 组！共 ${s.history.length} 步` : "连线失败"}</h2>
       <p class="r-meta">${won ? "每一组的颜色代表难度（黄易紫难）" : "正确答案已在上方亮出"}</p>
-      <div class="btn-row"><button class="btn" id="connShareBtn">复制分享卡</button></div>`;
+      <div class="btn-row">
+        <button class="btn" id="connAgainBtn">再来一题（随机）</button>
+        <button class="btn ghost" id="connShareBtn">复制分享卡</button>
+      </div>
+      ${!inPractice ? '<p class="r-stats">每日题已完成，可以一直玩随机题 · 成绩与分享卡已定格</p>' : ""}`;
     $("#connResult").classList.remove("hidden");
     $("#connShareBtn").onclick = () =>
       copyText(SRD.buildConnShareText({ date: SRD.dateStr(), rows: s.history, won, practice: inPractice }));
+    $("#connAgainBtn").onclick = () => newPracticeRound();
   }
 
   function copyText(text) {
@@ -146,12 +158,7 @@
 
   $("#connSubmit").addEventListener("click", submit);
   $("#connClear").addEventListener("click", () => { selected = []; render(); });
-  $("#connPracticeBtn").addEventListener("click", () => {
-    inPractice = true;
-    practice = newState(Math.floor(Math.random() * puzzles.length), null);
-    selected = [];
-    render();
-  });
+  $("#connPracticeBtn").addEventListener("click", () => newPracticeRound());
   $("#connBackBtn").addEventListener("click", () => { inPractice = false; selected = []; render(); });
 
   initDaily();
